@@ -85,6 +85,9 @@ _tools = [
         ports=parse_ports([(0, 1)], [(1, 1)]),
         only_one=True,
     ),
+    ToolType(
+        id=ToolId.YELLOW, size=Offset(1, 1), ports=parse_ports([(0, 0)], [(0, 0)])
+    ),
     ToolType(id=ToolId.INPUT, size=Offset(1, 1), ports=parse_ports([], [(0, 0)])),
     ToolType(id=ToolId.OUTPUT, size=Offset(1, 1), ports=parse_ports([(0, 0)], [])),
 ]

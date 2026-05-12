@@ -20,6 +20,7 @@ class ToolId(enum.Enum):
     GREEN = 16
     CLEANER = 17
     TRANSLATE = 18
+    YELLOW = 19
 
 
 class MatrixPartId(enum.Enum):
