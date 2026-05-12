@@ -3,7 +3,12 @@
 import sys
 from pathlib import Path
 
-from uvs_nirmana.solution import LEVELS, InvalidSolutionError, Solution
+from uvs_nirmana.solution import (
+    LEVELS,
+    InvalidMetricError,
+    InvalidSolutionError,
+    Solution,
+)
 
 valid_sols = []
 for filepath in map(Path, sys.argv[1:]):
@@ -15,7 +20,9 @@ for filepath in map(Path, sys.argv[1:]):
     try:
         sol.check_all()
     except InvalidSolutionError as e:
-        print(f"{filepath.name}: {e}")
+        print(f"Error: {filepath.name}: {e}")
+    except InvalidMetricError as e:
+        print(f"Skipping: {filepath.name}: {e}")
     else:
         index = int(filepath.stem.removeprefix(level.prefix + "-"))
         valid_sols.append((sol, index))

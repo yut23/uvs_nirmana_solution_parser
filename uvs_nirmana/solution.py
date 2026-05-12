@@ -29,12 +29,17 @@ class Metrics:
         return f"{self.width}/{self.height}/{self.flux}"
 
 
+class InvalidMetricError(Exception):
+    pass
+
+
 class InvalidSolutionError(Exception):
     pass
 
 
 @dataclass(frozen=True, kw_only=True)
 class Solution(Parseable):
+    # pylint: disable=too-many-instance-attributes
     version: int
     level_id: int
     solved: bool
@@ -112,12 +117,29 @@ class Solution(Parseable):
             else:
                 tool_bbox.update(part.tool_bbox())
             if tool_bbox not in LEVEL_BBOX:
-                msg = f"part at index {i} is outside level bounding box: {part}"
+                msg = f"{part.tool_id.name.title()} at index {i} is outside level bounding box: {part}"
                 raise InvalidSolutionError(msg)
             if part.pipe_bbox() not in LEVEL_BBOX:
-                msg = f"pipes for part at index {i} are outside level bounding box: {part}"
+                msg = f"Pipes for part at index {i} are outside level bounding box: {part}"
                 raise InvalidSolutionError(msg)
         return tool_bbox
+
+    def check_pipes(self) -> None:
+        for part in self.pipeline_parts:
+            for i, (offset, port) in enumerate(zip(part.pipe_offsets, part.tool.ports)):
+                desc = f"Pipe {i} of {part.tool_id.name.lower()} at {part.pos}"
+                if port.is_output:
+                    if abs(offset.rows) >= min(abs(offset.cols), 2):
+                        msg = f"{desc} is too long vertically"
+                        raise InvalidSolutionError(msg)
+                    if offset.cols < 0:
+                        msg = f"{desc} goes backward"
+                        raise InvalidSolutionError(msg)
+                else:
+                    # input pipe must be (0, 0)
+                    if offset.cols != 0 or offset.rows != 0:
+                        msg = f"{desc} is an input and has a non-zero offset"
+                        raise InvalidSolutionError(msg)
 
     def check_metrics(self, tool_bbox: BoundingBox | None = None) -> None:
         if tool_bbox is None:
@@ -134,15 +156,15 @@ class Solution(Parseable):
             height = tool_bbox.size.rows
         if width != metrics.width:
             msg = f"Width doesn't match: calculated {width}, read {metrics.width}"
-            raise InvalidSolutionError(msg)
+            raise InvalidMetricError(msg)
         if height != metrics.height:
             msg = f"Height doesn't match: calculated {height}, read {metrics.height}"
-            raise InvalidSolutionError(msg)
+            raise InvalidMetricError(msg)
         # check flux
         flux = len(self.matrix_parts)
         if flux != metrics.flux:
             msg = f"Flux doesn't match: calculated {flux}, read {metrics.flux}"
-            raise InvalidSolutionError(msg)
+            raise InvalidMetricError(msg)
 
     def get_metrics(self) -> Metrics | None:
         if not self.solved or 0x7FFFFFFF in {self.width, self.height, self.flux}:
