@@ -72,7 +72,7 @@ _tools = [
     ToolType(
         id=ToolId.TOGGLE,
         size=Offset(1, 3),
-        ports=parse_ports([(0, 0), (0, 2)], [(0, 1)]),
+        ports=parse_ports([(0, 1)], [(0, 0), (0, 2)]),
     ),
     ToolType(
         id=ToolId.CLEANER, size=Offset(2, 3), ports=parse_ports([(0, 1)], [(1, 1)])

@@ -104,6 +104,7 @@ class Solution(Parseable):
                     raise InvalidSolutionError(msg)
         # TODO: check for overlap
         tool_bbox = self.calc_bbox()
+        self.check_pipes()
         self.check_metrics(tool_bbox)
 
     def calc_bbox(self) -> BoundingBox | None:
@@ -127,18 +128,18 @@ class Solution(Parseable):
     def check_pipes(self) -> None:
         for part in self.pipeline_parts:
             for i, (offset, port) in enumerate(zip(part.pipe_offsets, part.tool.ports)):
-                desc = f"Pipe {i} of {part.tool_id.name.lower()} at {part.pos}"
+                desc = f"Pipe {i} of {part.tool_id.name.title()} at {part.pos}"
                 if port.is_output:
-                    if abs(offset.rows) >= min(abs(offset.cols), 2):
-                        msg = f"{desc} is too long vertically"
+                    if abs(offset.rows) > min(abs(offset.cols), 2):
+                        msg = f"{desc} is too long vertically ({offset})"
                         raise InvalidSolutionError(msg)
                     if offset.cols < 0:
-                        msg = f"{desc} goes backward"
+                        msg = f"{desc} goes backward ({offset})"
                         raise InvalidSolutionError(msg)
                 else:
                     # input pipe must be (0, 0)
                     if offset.cols != 0 or offset.rows != 0:
-                        msg = f"{desc} is an input and has a non-zero offset"
+                        msg = f"{desc} is an input and has a non-zero offset ({offset})"
                         raise InvalidSolutionError(msg)
 
     def check_metrics(self, tool_bbox: BoundingBox | None = None) -> None:
